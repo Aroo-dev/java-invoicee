@@ -1,4 +1,4 @@
-package pl.edu.agh.mwo.invoice;
+
 
 import java.math.BigDecimal;
 
@@ -8,10 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import pl.edu.agh.mwo.invoice.Invoice;
-import pl.edu.agh.mwo.invoice.product.DairyProduct;
-import pl.edu.agh.mwo.invoice.product.OtherProduct;
-import pl.edu.agh.mwo.invoice.product.Product;
-import pl.edu.agh.mwo.invoice.product.TaxFreeProduct;
+import pl.edu.agh.mwo.invoice.product.*;
 
 public class InvoiceTest {
     private Invoice invoice;
@@ -124,5 +121,63 @@ public class InvoiceTest {
     @Test(expected = IllegalArgumentException.class)
     public void testAddingNullProduct() {
         invoice.addProduct(null);
+    }
+
+    @Test
+    public void testInvoiceNumber() {
+        Invoice invoice = new Invoice();
+        int number = invoice.getNumber();
+    }
+
+    @Test
+    public void testInvoiceNumberIsGreaterThen0() {
+        Invoice invoice = new Invoice();
+        Assert.assertTrue(invoice.getNumber() > 0);
+    }
+
+    @Test
+    public void testInvoiceNumberIsGreaterThenLastOne() {
+        Invoice invoice1 = new Invoice();
+        Invoice invoice2 = new Invoice();
+
+        Assert.assertTrue(invoice1.getNumber() < invoice2.getNumber());
+
+    }
+
+    @Test
+    public void testInvoiceHasUniqueNumber() {
+        Invoice invoice1 = new Invoice();
+        Invoice invoice2 = new Invoice();
+        Assert.assertNotEquals(invoice1.getNumber(), invoice2.getNumber());
+    }
+
+    @Test
+    public void testInvoiceCanPrintProductsList() {
+        invoice.addProduct(new DairyProduct("Mleko", new BigDecimal("2.50")), 2);
+        invoice.addProduct(new OtherProduct("Chleb", new BigDecimal("3.00")), 1);
+        String expectedOutput = "Numer faktury: 1\n" +
+                "Mleko, 2 szt, cena: 2.50\n" +
+                "Chleb, 1 szt, cena: 3.00\n" +
+                "Liczba pozycji: 2";
+        Assert.assertEquals(expectedOutput, invoice.printProductsList());
+    }
+
+    @Test
+    public void testAddingTheSameProductIncreasesQuantity() {
+        Product milk = new DairyProduct("Mleko", new BigDecimal("2.50"));
+        invoice.addProduct(milk, 2);
+        invoice.addProduct(milk, 3);
+
+        Assert.assertEquals(Integer.valueOf(5), invoice.getProductQuantity(milk));
+    }
+    @Test
+    public void testBottleOfWineHasExciseTaxIncluded() {
+        Product wine = new BottleOfWine("Wino", new BigDecimal("10.00"));
+        Assert.assertThat(new BigDecimal("17.78"), Matchers.comparesEqualTo(wine.getPriceWithTax()));
+    }
+    @Test
+    public void testFuelCanisterHasExciseTaxIncluded() {
+        Product fuel = new FuelCanister("Paliwo", new BigDecimal("50.00"));
+        Assert.assertThat(new BigDecimal("55.56"), Matchers.comparesEqualTo(fuel.getPriceWithTax()));
     }
 }
